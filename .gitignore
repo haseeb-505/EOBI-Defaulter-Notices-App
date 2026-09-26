@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+
+# Local data
+*.xlsx
+*.xls
+*.csv
+
+# Generated documents
+generated_notices/
+*.docx
+*.zip
+
+# Local configuration
+.env
