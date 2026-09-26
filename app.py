@@ -124,39 +124,66 @@ col1, col2 = st.columns(2)
 
 with col1:
 
-    st.subheader(
-        "1. Upload Defaulter Data"
-    )
+    st.subheader("1. Upload Defaulter Data")
 
     data_file = st.file_uploader(
-        "Excel or CSV file",
-        type=[
-            "xlsx",
-            "xls",
-            "csv"
-        ],
+        "Upload ONE Excel file only",
+        type=["xlsx", "xls"],
+        accept_multiple_files=False,
         help=(
-            "Upload the Excel/CSV file containing "
-            "the establishment records."
+            "Upload exactly ONE Excel file containing the establishment records. "
+            "CSV files are not accepted."
         )
     )
 
+    if data_file is not None:
+
+        # Explicitly reject CSV files
+        if data_file.name.lower().endswith(".csv"):
+            st.error(
+                "❌ CSV file detected. Please upload an Excel file "
+                "(.xlsx or .xls) only."
+            )
+            data_file = None
+
+        elif not data_file.name.lower().endswith((".xlsx", ".xls")):
+            st.error(
+                "❌ Invalid file type. Please upload an Excel file "
+                "(.xlsx or .xls) only."
+            )
+            data_file = None
+
+        else:
+            st.success(f"✅ Excel file uploaded: {data_file.name}")
 
 with col2:
 
-    st.subheader(
-        "2. Upload Notice Template"
-    )
+    st.subheader("2. Upload Urdu Payment Notice")
 
-    template_file = st.file_uploader(
-        "Urdu Payment Notice Word Template",
+    urdu_notice_file = st.file_uploader(
+        "Upload ONE Urdu Payment Notice",
         type=["docx"],
+        accept_multiple_files=False,
         help=(
-            "Upload the Word notice template containing "
-            "placeholders such as «Name», «Period», etc."
+            "Upload exactly ONE Urdu Payment Notice template "
+            "in Microsoft Word (.docx) format."
         )
     )
 
+    if urdu_notice_file is not None:
+
+        if not urdu_notice_file.name.lower().endswith(".docx"):
+            st.error(
+                "❌ Invalid file type. Please upload a Word "
+                "(.docx) file only."
+            )
+            urdu_notice_file = None
+
+        else:
+            st.success(
+                f"✅ Urdu Payment Notice uploaded: "
+                f"{urdu_notice_file.name}"
+            )
 
 st.divider()
 
@@ -208,11 +235,11 @@ if data_file is not None:
 # TEMPLATE INFORMATION
 # ============================================================
 
-if template_file is not None:
+if urdu_notice_file is not None:
 
     st.success(
         f"Notice template selected: "
-        f"**{template_file.name}**"
+        f"**{urdu_notice_file.name}**"
     )
 
 
@@ -223,7 +250,7 @@ if template_file is not None:
 st.divider()
 
 generate_button = st.button(
-    "🚀 Generate Notices & Assessment Sheets",
+    "Generate Notices & Assessment Sheets",
     type="primary",
     width="stretch"
 )
@@ -248,10 +275,10 @@ if generate_button:
         st.stop()
 
 
-    if template_file is None:
+    if urdu_notice_file is None:
 
         st.error(
-            "Please upload the Word notice template first."
+            "Please upload the Urdu Word notice template first."
         )
 
         st.stop()
@@ -293,7 +320,7 @@ if generate_button:
 
         template_path = os.path.join(
             working_dir,
-            template_file.name
+            urdu_notice_file.name
         )
 
         with open(
@@ -302,7 +329,7 @@ if generate_button:
         ) as f:
 
             f.write(
-                template_file.getbuffer()
+                urdu_notice_file.getbuffer()
             )
 
 
