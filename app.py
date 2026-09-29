@@ -22,6 +22,25 @@ st.set_page_config(
     layout="wide"
 )
 
+# Header
+col_left, col_right = st.columns([4, 1])
+
+with col_left:
+    st.markdown(
+        '<div class="main-title">'
+        '📄 EOBI Defaulter Notice & Assessment Generator'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+with col_right:
+    if st.button(
+        "🧮 Manual Default Calculation",
+        type="secondary",
+        width="stretch",
+    ):
+        st.switch_page("pages/manual_default_calculator.py")
+
 
 # ============================================================
 # CUSTOM CSS
