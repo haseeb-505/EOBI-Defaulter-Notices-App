@@ -5,9 +5,12 @@ import zipfile
 
 import streamlit as st
 import pandas as pd
+from datetime import date
 
-from generator import generate_all
-
+from generator import (
+    generate_all,
+    calculate_default_contribution
+)
 
 # ============================================================
 # PAGE CONFIG
@@ -241,6 +244,200 @@ if urdu_notice_file is not None:
         f"Notice template selected: "
         f"**{urdu_notice_file.name}**"
     )
+
+
+
+# ============================================================
+# DEFAULT PERIOD CALCULATOR
+# ============================================================
+
+st.divider()
+
+st.subheader("🧮 Default Period Contribution Calculator")
+
+st.write(
+    "Enter one or more default periods and the number of "
+    "Insured Persons (IPs). The calculation uses the same "
+    "financial-year contribution rates used in the "
+    "Defaulters Assessment Sheets."
+)
+
+calc_col1, calc_col2 = st.columns(2)
+
+with calc_col1:
+
+    number_of_periods = st.number_input(
+        "Number of Default Periods",
+        min_value=1,
+        max_value=20,
+        value=1,
+        step=1,
+        key="number_of_default_periods"
+    )
+
+with calc_col2:
+
+    calculator_ips = st.number_input(
+        "No. of Insured Persons (IPs)",
+        min_value=1,
+        value=1,
+        step=1,
+        key="calculator_ips"
+    )
+
+
+# ------------------------------------------------------------
+# PERIOD INPUTS
+# ------------------------------------------------------------
+
+manual_periods = []
+
+for i in range(int(number_of_periods)):
+
+    st.markdown(
+        f"**Default Period {i + 1}**"
+    )
+
+    period_col1, period_col2 = st.columns(2)
+
+    with period_col1:
+
+        from_date = st.date_input(
+            "From",
+            value=date.today(),
+            key=f"default_from_{i}"
+        )
+
+    with period_col2:
+
+        to_date = st.date_input(
+            "To",
+            value=date.today(),
+            key=f"default_to_{i}"
+        )
+
+    manual_periods.append(
+        (
+            pd.Timestamp(from_date).to_pydatetime(),
+            pd.Timestamp(to_date).to_pydatetime()
+        )
+    )
+
+
+# ------------------------------------------------------------
+# CALCULATE BUTTON
+# ------------------------------------------------------------
+
+calculate_button = st.button(
+    "🧮 Calculate Default Contribution",
+    type="secondary",
+    width="stretch"
+)
+
+
+# ------------------------------------------------------------
+# CALCULATION
+# ------------------------------------------------------------
+
+if calculate_button:
+
+    try:
+
+        calculation = calculate_default_contribution(
+            periods=manual_periods,
+            ips=int(calculator_ips)
+        )
+
+        st.success(
+            "Default contribution calculated successfully."
+        )
+
+        st.markdown(
+            "### Detailed Calculation"
+        )
+
+        calculation_df = pd.DataFrame(
+            calculation["rows"]
+        )
+
+        # Format numbers for display
+        display_df = calculation_df.copy()
+
+        for column in [
+            "Minimum Wages",
+            "Contribution Rate",
+            "Assessed Amount",
+            "Principal Payable"
+        ]:
+
+            display_df[column] = display_df[column].apply(
+                lambda x: (
+                    f"{int(x):,}"
+                    if isinstance(x, (int, float))
+                    and x != ""
+                    else x
+                )
+            )
+
+        st.dataframe(
+            display_df,
+            width="stretch",
+            hide_index=True
+        )
+
+        st.divider()
+
+        # ----------------------------------------------------
+        # SUMMARY
+        # ----------------------------------------------------
+
+        summary_col1, summary_col2, summary_col3 = st.columns(3)
+
+        with summary_col1:
+
+            st.metric(
+                "Total Months",
+                f"{calculation['total_months']:,}"
+            )
+
+        with summary_col2:
+
+            st.metric(
+                "Principal Contribution",
+                f"{calculation['total_assessed']:,}"
+            )
+
+        with summary_col3:
+
+            st.metric(
+                "50% Statutory Increase",
+                f"{calculation['statutory_amount']:,}"
+            )
+
+        st.divider()
+
+        # ----------------------------------------------------
+        # FINAL TOTAL
+        # ----------------------------------------------------
+
+        st.subheader("Total Payable")
+
+        st.metric(
+            "Principal + 50% Increase",
+            f"{calculation['final_total']:,}"
+        )
+
+        st.info(
+            "The 50% statutory increase shown here is the same "
+            "50% approximate increase used in the Defaulters "
+            "Assessment Sheet."
+        )
+
+    except Exception as e:
+
+        st.error(
+            f"Calculation failed: {e}"
+        )
 
 
 # ============================================================

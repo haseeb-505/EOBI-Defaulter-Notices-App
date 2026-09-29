@@ -84,7 +84,7 @@ def format_date(val):
 
 def convert_to_datetime(value):
     """
-    Convert Excel/CSV date values into Python datetime.
+    Convert Excel date values into Python datetime.
     """
     if pd.isna(value):
         return None
@@ -174,6 +174,113 @@ def months_between(start, end):
         + (end.month - start.month)
         + 1
     )
+
+
+# ============================================================
+# DEFAULT PERIOD CALCULATOR
+# ============================================================
+
+def calculate_default_contribution(periods, ips):
+    """
+    Calculate contribution for manually entered default periods.
+
+    Parameters
+    ----------
+    periods : list of tuples
+        [(from_date, to_date), ...]
+
+    ips : int
+        Number of insured persons.
+
+    Returns
+    -------
+    dict
+        Contains calculation rows, subtotal, 50% increase
+        and final total.
+    """
+
+    if not periods:
+        raise ValueError("Please enter at least one default period.")
+
+    if ips <= 0:
+        raise ValueError("Number of IPs must be greater than zero.")
+
+    all_splits = []
+
+    for from_date, to_date in periods:
+
+        if from_date is None or to_date is None:
+            continue
+
+        if to_date < from_date:
+            raise ValueError(
+                "The 'To' date cannot be earlier than the 'From' date."
+            )
+
+        all_splits.extend(
+            split_into_fy(
+                from_date,
+                to_date
+            )
+        )
+
+    if not all_splits:
+        raise ValueError(
+            "No valid months were found in the entered periods."
+        )
+
+    # Sort chronologically
+    all_splits.sort(
+        key=lambda x: datetime.strptime(
+            x["from_str"],
+            "%b-%y"
+        )
+    )
+
+    calculation_rows = []
+
+    total_months = 0
+    total_assessed = 0
+
+    for period in all_splits:
+
+        assessed = (
+            period["rate"]
+            * ips
+            * period["months"]
+        )
+
+        calculation_rows.append({
+            "From": period["from_str"],
+            "To": period["to_str"],
+            "No. of Months": period["months"],
+            "No. IPs": ips,
+            "Minimum Wages": period["wages"],
+            "Contribution Rate": period["rate"],
+            "Assessed Amount": assessed,
+            "Paid Amount": "",
+            "Principal Payable": assessed,
+        })
+
+        total_months += period["months"]
+        total_assessed += assessed
+
+    statutory_amount = int(
+        total_assessed * 0.50
+    )
+
+    final_total = (
+        total_assessed
+        + statutory_amount
+    )
+
+    return {
+        "rows": calculation_rows,
+        "total_months": total_months,
+        "total_assessed": total_assessed,
+        "statutory_amount": statutory_amount,
+        "final_total": final_total,
+    }
 
 
 def split_into_fy(from_date, to_date):
@@ -1120,6 +1227,7 @@ def create_assessment_sheet(
 # ============================================================
 
 REQUIRED_NOTICE_COLUMNS = [
+    # "Ref. Letter No.",
     "Name",
     "Name of the Establishment",
     "Address",
@@ -1176,7 +1284,7 @@ def generate_all(
     Parameters
     ----------
     data_file:
-        Path to Excel or CSV data file.
+        Path to Excel data file.
 
     notice_template:
         Path to Urdu Word notice template.
@@ -1219,7 +1327,7 @@ def generate_all(
 
         raise ValueError(
             "Unsupported data file. "
-            "Please upload XLSX, XLS or CSV."
+            "Please upload XLSX or XLS."
         )
 
     # --------------------------------------------------------
@@ -1293,7 +1401,11 @@ def generate_all(
         data = {}
 
         field_map = {
+            
+            # optional column
+            "Ref. Letter No.": "Ref. Letter No.",
 
+            # required column
             "Name":
                 "Name",
 
