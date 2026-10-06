@@ -52,6 +52,35 @@ st.markdown(
             border-radius: 8px;
             padding: 12px;
         }
+        
+        /* Red styling for the 5th metric */
+        div[data-testid="stHorizontalBlock"] > div:nth-child(5) div[data-testid="stMetric"] {
+            border: 1px solid #ff4b4b;
+            background-color: #d32f2f;;
+        }
+
+        div[data-testid="stHorizontalBlock"] > div:nth-child(5) div[data-testid="stMetricLabel"] {
+            color: #d32f2f !important;
+        }
+
+        div[data-testid="stHorizontalBlock"] > div:nth-child(5) div[data-testid="stMetricValue"] {
+            color: #ffffff !important;
+        }
+        
+         /* Green styling for the 2nd metric */
+        div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMetric"] {
+            border: 1px solid #2e7d32;
+            background-color: #2e7d32;
+        }
+
+        div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMetricLabel"] {
+            color: #ffffff !important;
+        }
+
+        div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMetricValue"] {
+            color: #ffffff !important;
+        }
+        
     </style>
     """,
     unsafe_allow_html=True,
@@ -344,7 +373,7 @@ if calculate_button:
 
         st.subheader("Calculation Summary")
 
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4, col5, col6 = st.columns(6)
 
         with col1:
             st.metric(
@@ -356,15 +385,27 @@ if calculate_button:
             st.metric(
                 "Principal Contribution",
                 f"{result['total_assessed']:,}",
+            ) 
+           
+        with col3:
+            st.metric(
+                "Employer Contribution",
+               f"{(result['total_assessed'] / 6) * 5:,.0f}"
+            ) 
+
+        with col4:
+            st.metric(
+                "Employees Contribution",
+                f"{(result['total_assessed'] / 6):,.0f}",
             )
 
-        with col3:
+        with col5:
             st.metric(
                 "50% Statutory Increase",
                 f"{result['statutory_amount']:,}",
             )
 
-        with col4:
+        with col6:
             st.metric(
                 "Total Payable",
                 f"{result['final_total']:,}",
