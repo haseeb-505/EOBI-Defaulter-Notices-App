@@ -345,11 +345,12 @@ def create_address_labels_html(df):
 """
 
 
+
 # ============================================================
-# HEADER
+# HEADER AND NAVIGATION BUTTONS
 # ============================================================
 
-col_left, col_right = st.columns([4, 1])
+col_left, col_manual, col_labels = st.columns([4, 1.4, 1.4])
 
 with col_left:
     st.markdown(
@@ -361,13 +362,21 @@ with col_left:
         unsafe_allow_html=True,
     )
 
-with col_right:
+with col_manual:
     if st.button(
         "🧮 Manual Default Calculation",
         type="secondary",
         width="stretch",
     ):
         st.switch_page("pages/manual_default_calculator.py")
+
+with col_labels:
+    if st.button(
+        "🏷️ Address Labels",
+        type="secondary",
+        width="stretch",
+    ):
+        st.switch_page("pages/address_label_generator.py")
 
 st.write(
     "Upload your establishment Excel file and Urdu payment "
