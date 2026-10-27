@@ -14,6 +14,10 @@ st.set_page_config(
 )
 
 st.title("🏷️ EOBI Address Label Generator")
+
+if st.button("🏠 Main Page", type="secondary"):
+    st.switch_page("app.py")
+
 st.write(
     "Upload an Excel file to generate printable establishment address labels. "
     "Owner/Contact and Phone are optional."
